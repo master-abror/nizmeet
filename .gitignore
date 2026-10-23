@@ -1,0 +1,26 @@
+# Rahasia & lingkungan
+.env
+.env.*
+!.env.example
+
+# Dependensi & build
+node_modules/
+.svelte-kit/
+dist/
+build/
+coverage/
+*.exe
+*.zip
+*.log
+
+# Wails: pertahankan placeholder agar go:embed tidak gagal
+!desktop/frontend/dist/
+desktop/frontend/dist/*
+!desktop/frontend/dist/.gitkeep
+
+# OS & editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,31 @@
+name: Perubahan Kontrak
+description: Usulan perubahan pada docs/contracts (DDL, OpenAPI, WebSocket, sync, prompt)
+labels: ["contract"]
+body:
+  - type: input
+    id: berkas
+    attributes:
+      label: Berkas kontrak yang berubah
+      placeholder: docs/contracts/openapi/documents.yaml
+    validations:
+      required: true
+  - type: textarea
+    id: alasan
+    attributes:
+      label: Mengapa perubahan ini perlu?
+    validations:
+      required: true
+  - type: textarea
+    id: dampak
+    attributes:
+      label: Dampak ke track lain
+      description: Track mana yang harus menyesuaikan kode, dan kapan?
+    validations:
+      required: true
+  - type: dropdown
+    id: kompat
+    attributes:
+      label: Kompatibilitas
+      options: ["Kompatibel (tambahan)", "Breaking (perlu naik versi minor kontrak)"]
+    validations:
+      required: true

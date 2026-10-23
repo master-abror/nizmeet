@@ -1,0 +1,10 @@
+# Semua teks memakai LF agar konsisten antara Windows dan OS lain
+* text=auto eol=lf
+*.bat eol=crlf
+*.cmd eol=crlf
+*.ps1 eol=crlf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.pdf binary

@@ -1,0 +1,23 @@
+# Pemeriksaan minimum sebelum CI penuh (Milestone 0.2) tersedia.
+# Setelah 0.2, jadikan job "ci" sebagai required status check.
+name: repo-hygiene
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  repo-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tolak berkas terlarang yang ter-commit
+        run: |
+          set -euo pipefail
+          bad=$(git ls-files | grep -E '(^|/)\.env(\.(local|production|development|prod|dev))?$|\.exe$|(^|/)node_modules/' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Berkas terlarang ter-commit:"
+            echo "$bad"
+            exit 1
+          fi
+          echo "OK: tidak ada .env, .exe, atau node_modules yang ter-commit."

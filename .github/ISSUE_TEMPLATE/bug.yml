@@ -1,0 +1,29 @@
+name: Bug
+description: Laporkan perilaku yang salah
+labels: ["bug"]
+body:
+  - type: textarea
+    id: apa
+    attributes:
+      label: Apa yang terjadi?
+      description: Perilaku aktual vs yang diharapkan.
+    validations:
+      required: true
+  - type: textarea
+    id: langkah
+    attributes:
+      label: Langkah mereproduksi
+    validations:
+      required: true
+  - type: input
+    id: lingkungan
+    attributes:
+      label: Lingkungan
+      description: OS, versi Go/Node/Wails, commit atau tag.
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options: ["S (Server)", "D (Desktop)", "W (Web)", "X (Lintas)"]
+    validations:
+      required: true

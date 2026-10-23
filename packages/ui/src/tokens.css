@@ -1,0 +1,6 @@
+:root {
+  --ui-brand: #4f46e5;
+  --ui-brand-contrast: #ffffff;
+  --ui-radius: 0.5rem;
+  --ui-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

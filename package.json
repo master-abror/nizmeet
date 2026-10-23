@@ -1,0 +1,8 @@
+{
+  "name": "copilot",
+  "private": true,
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:desktop-ui": "pnpm --filter @copilot/desktop-frontend dev"
+  }
+}

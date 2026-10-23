@@ -1,0 +1,20 @@
+# Ganti @master-abror dan @BizzyReal dengan username GitHub.
+# Dengan "Require review from Code Owners" aktif, PR butuh approval dari
+# salah satu pemilik pada pola yang cocok. Penulis PR tidak dapat menyetujui
+# PR-nya sendiri, jadi review silang terjadi otomatis.
+
+*                       @master-abror
+/server/                @master-abror @BizzyReal
+/deploy/                @master-abror @BizzyReal
+/desktop/               @BizzyReal @master-abror
+/tools/                 @BizzyReal @master-abror
+/web/                   @master-abror @BizzyReal
+/packages/ui/           @master-abror @BizzyReal
+/docs/contracts/        @master-abror @BizzyReal
+/docs/adr/              @master-abror @BizzyReal
+/docs/handover/         @master-abror @BizzyReal
+/HANDOVER.md            @master-abror
+/.github/               @master-abror
+/go.work                @master-abror
+/pnpm-workspace.yaml    @master-abror
+/pnpm-lock.yaml         @master-abror
