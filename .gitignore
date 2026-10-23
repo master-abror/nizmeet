@@ -8,6 +8,7 @@ node_modules/
 .svelte-kit/
 dist/
 build/
+!desktop/build/
 coverage/
 *.exe
 *.zip

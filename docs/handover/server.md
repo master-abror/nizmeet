@@ -1,16 +1,31 @@
 # HANDOVER — TRACK S (Server)
 
 - **PIC:** Owner
-- **Current Milestone:** G.1 → 0.1 → 0.3/0.4 → 1.1
-- **Branch / Tag terakhir:** - / (belum ada tag)
+- **Current Milestone:** 0.1 selesai (tag v0.0.1) → berikutnya 0.3 / 0.4 / C.1
+- **Branch / Tag terakhir:** feat/0.1-scaffold / v0.0.1
 - **Completed Features:**
-  - (belum ada)
-- **In-Progress / Next Task:** Selesaikan Fase G dan Milestone 0.1, lalu mulai 0.3, 0.4, C.1.
+  - [x] G.1–G.3 (Fase G)
+  - [x] 0.1 Repo scaffolding & ADR awal: `/server` (Go, `slog` hello), `/desktop` (Wails v2 + Svelte 5 + Tailwind), `/web` (SvelteKit + Tailwind), `/packages/ui` (komponen `Button` dipakai di web dan desktop), `go.work`
+- **In-Progress / Next Task:** Undang Kontributor (`docs/github-setup-steps.md` bagian 5), lalu mulai 0.3 (dev infra lokal), 0.4 (kontrak ekstensibilitas), C.1 (ERD & DDL).
 - **Area berkas milik track ini:** /server, /deploy
-- **Key Files Modified:**
-  - (belum ada)
+- **Key Files Modified:** `go.work`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.gitignore`, `README.md`, `server/`, `desktop/`, `web/`
 - **Dependensi lintas track:** kontrak v0 belum dibekukan (C.8). Gunakan mock server (C.7) untuk pekerjaan yang butuh server.
-- **Context / Special Notes:** Wails v2 (ADR-0001). Go 1.27.x. Baca `docs/MASTER_PLAN_V2.2.md` Bagian 2 dan 5.
+- **Context / Special Notes:** Wails v2 (ADR-0001). Versi: Go 1.27.1, Node v24.21.0 (status "LTS aktif" belum diverifikasi), pnpm 12.15.0, Wails v2.16.0, Svelte 5.57.2, SvelteKit 3.1.0, Vite 8.3.5, Tailwind 4.3.3, sv 1.1.1. `package.json` masih memakai rentang `^`; versi persis dikunci `pnpm-lock.yaml` (pin eksak per Bagian 0 butir 10 belum diterapkan; usul: Milestone 0.2).
+
+### Penyimpangan dari `docs/milestone-0.1-instructions.md`
+1. Repo dipindah dari OneDrive ke `C:\Users\maste\NizMeet\REPO` (OneDrive menyebabkan error `go: ... cloud file provider is not running`).
+2. pnpm dipin (`corepack use`) setelah branch dibuat; perintah itu ikut menjalankan install.
+3. `desktop/go.mod`: `go 1.25.0` dinaikkan ke `1.27.1`.
+4. `desktop/frontend/src/main.ts`: memakai `mount()` (Svelte 5) dan tetap mengimpor `./style.css`.
+5. `desktop/.gitignore` ditulis ulang (`frontend/dist/*` + `!frontend/dist/.gitkeep`); pola lama `frontend/dist` mengabaikan `.gitkeep`.
+6. `.gitignore` root: ditambah `!desktop/build/` karena aturan `build/` mengabaikan aset build Wails (ikon, manifest, installer).
+7. `sv create` mengabaikan `--no-install` (membuat `web/node_modules` dan `package-lock.json`, keduanya dihapus) dan tidak memasang Tailwind; Tailwind ditambah dengan `sv add tailwindcss="plugins:none"`.
+8. CSS global web adalah `web/src/routes/layout.css` (bukan `app.css`); impor token: `../../../packages/ui/src/tokens.css`.
+9. pnpm 12 menambah `allowBuilds` di `pnpm-workspace.yaml`; `svelte-preprocess: false` (skripnya hanya `echo`).
+10. `Button` di `desktop/frontend/src/App.svelte` disisipkan tepat setelah `<main>`.
+11. `vite build` dan `wails dev` menghapus `desktop/frontend/dist/.gitkeep`; buat ulang (`touch`) sebelum `git add`.
+12. Peringatan yang diketahui, build tetap lulus: `@sveltejs/vite-plugin-svelte@6.2.4` (desktop) menyatakan dukungan `vite ^6.3 || ^7`, terpasang Vite 8.3.5 (eksperimental); `verbatimModuleSyntax` belum diset di `tsconfig.json` desktop. Kandidat perbaikan: samakan plugin desktop dengan web (`^7.2.0`).
+13. Dipertahankan atas keputusan Owner: email di blok `author` `desktop/wails.json`, dan komentar `// replace ...` (path lokal) di `desktop/go.mod`.
 
 ## Log Checkpoint (terbaru di atas)
 

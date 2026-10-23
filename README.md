@@ -29,10 +29,15 @@ Status: tahap perencanaan dan scaffolding. Rencana lengkap: [`docs/MASTER_PLAN_V
 ## Versi tool (isi dan pin saat Milestone 0.1)
 | Tool | Versi |
 | --- | --- |
-| Go | 1.27.x (minimal 1.27.1) — isi: `____` |
-| Node (LTS aktif) | `____` |
-| pnpm | `____` |
-| Wails CLI (v2) | `____` |
+| Go | 1.27.1 |
+| Node (LTS aktif) | v24.21.0 |
+| pnpm | 12.15.0 (dipin lewat `packageManager` di `package.json` root) |
+| Wails CLI (v2) | v2.16.0 |
+| Svelte | 5.57.2 (web dan desktop) |
+| SvelteKit | 3.1.0 (web) |
+| Vite | 8.3.5 (web dan desktop) |
+| Tailwind CSS | 4.3.3 (web dan desktop) |
+| Svelte CLI (`sv`) | 1.1.1 |
 | PostgreSQL / Redis | 18.`__` / `____` (Milestone 0.3) |
 
 ## Memulai
