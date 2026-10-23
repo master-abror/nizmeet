@@ -2,3 +2,5 @@ packages:
   - "web"
   - "desktop/frontend"
   - "packages/*"
+allowBuilds:
+  svelte-preprocess: false
