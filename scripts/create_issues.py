@@ -2,7 +2,7 @@
 """Membuat label, GitHub Milestones (W0-W7), dan satu issue per milestone dari Master Plan.
 
 Sumber kebenaran: docs/MASTER_PLAN_V2.2.md (tabel TRACK-MAP + blok milestone).
-Aman dijalankan ulang: issue dengan judul yang sama dilewati.
+Aman dijalankan ulang: issue yang sudah ada tidak digandakan; label ready/blocked disinkronkan dan issue yang selesai ditutup.
 
 Pemakaian:
   python3 scripts/create_issues.py --dry-run
@@ -111,17 +111,29 @@ def main():
             gh(["label", "create", n, "--color", c, "--description", d, "--force"])
         for w, d in WAVE_DESC.items():
             gh(["api", "repos/{owner}/{repo}/milestones", "-f", f"title={w}", "-f", f"description={d}"], check=False)
-        lst = json.loads(gh(["issue", "list", "--state", "all", "--limit", "500", "--json", "number,title"]).stdout)
-        existing = {i["title"]: i["number"] for i in lst}
+        lst = json.loads(gh(["issue", "list", "--state", "all", "--limit", "500", "--json", "number,title,state"]).stdout)
+        existing = {i["title"]: i for i in lst}
 
     num, made, skipped = {}, 0, 0
     for mid in topo(rows):
         row, m = rows[mid], ms[mid]
         title = f"[{mid}] {m['title']}"
-        if title in existing:
-            num[mid] = existing[title]; skipped += 1; continue
         is_done = mid in done
         ready = all(d in done for d in row["deps"]) and not is_done
+        if title in existing:
+            ex = existing[title]
+            num[mid] = ex["number"]; skipped += 1
+            if a.apply:  # sinkronkan label ready/blocked dan tutup issue yang sudah selesai
+                want = None if is_done else ("ready" if ready else "blocked")
+                add = [want] if want else []
+                rem = [x for x in ("ready", "blocked") if x != want]
+                args = ["issue", "edit", str(ex["number"])]
+                for x in add: args += ["--add-label", x]
+                for x in rem: args += ["--remove-label", x]
+                gh(args, check=False)
+                if is_done and ex["state"] == "OPEN":
+                    gh(["issue", "close", str(ex["number"]), "--comment", "Selesai."], check=False)
+            continue
         labels = [TRACK_LABEL[row["track"]]] + ([] if is_done else ["ready" if ready else "blocked"])
         if "🚩" in m["tag"]: labels.append("gate")
         body = build_body(mid, row, m, num)
@@ -137,7 +149,7 @@ def main():
         if is_done:
             gh(["issue", "close", str(num[mid]), "--comment", "Sudah selesai sebelum issue dibuat."])
         print(f"dibuat #{num[mid]} {title}")
-    print(f"\nTotal milestone: {len(rows)} | dibuat: {made} | dilewati (sudah ada): {skipped}" if a.apply
+    print(f"\nTotal milestone: {len(rows)} | dibuat: {made} | sudah ada (label disinkronkan): {skipped}" if a.apply
           else f"\nDRY-RUN OK: {len(rows)} issue akan dibuat. Contoh body ada di bawah.\n\n" + build_body("0.1", rows["0.1"], ms["0.1"], {"G.3": 3}))
 
 if __name__ == "__main__":

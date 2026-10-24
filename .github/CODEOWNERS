@@ -1,4 +1,3 @@
-# Ganti @master-abror dan @BizzyReal dengan username GitHub.
 # Dengan "Require review from Code Owners" aktif, PR butuh approval dari
 # salah satu pemilik pada pola yang cocok. Penulis PR tidak dapat menyetujui
 # PR-nya sendiri, jadi review silang terjadi otomatis.
