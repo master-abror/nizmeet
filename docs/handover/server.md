@@ -26,6 +26,12 @@
 11. `vite build` dan `wails dev` menghapus `desktop/frontend/dist/.gitkeep`; buat ulang (`touch`) sebelum `git add`.
 12. Peringatan yang diketahui, build tetap lulus: `@sveltejs/vite-plugin-svelte@6.2.4` (desktop) menyatakan dukungan `vite ^6.3 || ^7`, terpasang Vite 8.3.5 (eksperimental); `verbatimModuleSyntax` belum diset di `tsconfig.json` desktop. Kandidat perbaikan: samakan plugin desktop dengan web (`^7.2.0`).
 13. Dipertahankan atas keputusan Owner: email di blok `author` `desktop/wails.json`, dan komentar `// replace ...` (path lokal) di `desktop/go.mod`.
+14. `desktop/frontend/package.json.md5` ikut ter-commit (kemungkinan dibuat Wails saat `wails dev`; belum diverifikasi). Opsi: hapus dan tambahkan ke `.gitignore`.
+15. Ruleset `main-protection` awalnya `bypass_actors: []`, sehingga `gh pr merge --admin` ditolak. Ditambahkan bypass `Repository admin` (mode `pull_request`). Ini berbeda dari `enforce_admins: false` di `docs/github-setup-steps.md`.
+16. Ruleset: `required_status_checks` kosong (dokumen meminta `repo-hygiene` wajib dan branch up-to-date) dan `allowed_merge_methods` memuat merge, squash, dan rebase (master plan: hanya squash). Belum diubah.
+17. Git Bash tidak punya `python3`; pakai `python` (3.12.10). Perintah yang mengubah repo dijalankan di Git Bash, bukan WSL.
+18. Issue baru dibuat setelah merge 0.1 (sebelumnya tidak ada issue). PR #1 memakai nomor #1, jadi issue mulai dari #2 (G.1 = #2, 0.1 = #5). Pembuatan sempat terputus oleh error jaringan di issue ke-24; total akhir 60 issue.
+19. Penugasan issue ke Kontributor ditunda sampai undangan diterima: `--contrib-login` membuat script berhenti bila akun belum menjadi collaborator.
 
 ## Log Checkpoint (terbaru di atas)
 

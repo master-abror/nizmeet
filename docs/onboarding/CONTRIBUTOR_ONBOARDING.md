@@ -22,7 +22,7 @@ Pasang sesuai versi di `README.md`: Git, GitHub CLI, Go ≥ 1.27.1, Node LTS, pn
 git config --global core.autocrlf false
 git config --global core.longpaths true
 gh auth login
-gh repo clone OWNER/REPO && cd REPO
+gh repo clone master-abror/nizmeet && cd nizmeet
 pnpm install
 ```
 Verifikasi: `cd desktop && wails dev` menampilkan aplikasi dasar.
