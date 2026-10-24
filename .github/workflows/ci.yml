@@ -1,0 +1,59 @@
+# CI minimum Milestone 0.2: lint + test (server dan desktop) di runner Windows.
+# Nama job "ci" = nama status check yang nanti dijadikan required oleh Owner.
+# repo-hygiene.yml tetap berjalan terpisah dan tidak diubah.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # Cegah konversi CRLF pada checkout (Makefile dengan CRLF merusak make).
+      - name: Matikan konversi CRLF
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v7
+
+      # make tidak ada di image runner Windows; Chocolatey ada.
+      - name: Pasang GNU Make
+        run: |
+          choco install make --no-progress -y
+          make --version
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.1'
+          cache-dependency-path: '**/go.sum'
+
+      # Versi pnpm dibaca dari packageManager di package.json (root).
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.21.0'
+
+      - name: Pasang dependensi JS
+        run: make deps
+
+      # Versi golangci-lint dibaca dari Makefile (GOLANGCI_LINT_VERSION).
+      - name: Pasang golangci-lint
+        run: |
+          make tools
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        if: ${{ !cancelled() }}
+        run: make test
