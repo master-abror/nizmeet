@@ -6,7 +6,7 @@
 - **Completed Features:**
   - [x] G.1–G.3 (Fase G)
   - [x] 0.1 Repo scaffolding & ADR awal: `/server` (Go, `slog` hello), `/desktop` (Wails v2 + Svelte 5 + Tailwind), `/web` (SvelteKit + Tailwind), `/packages/ui` (komponen `Button` dipakai di web dan desktop), `go.work`
-- **In-Progress / Next Task:** Undang Kontributor (`docs/github-setup-steps.md` bagian 5), lalu mulai 0.3 (dev infra lokal), 0.4 (kontrak ekstensibilitas), C.1 (ERD & DDL).
+- **In-Progress / Next Task:** Pastikan Kontributor (BizzyReal, sudah collaborator) menerima onboarding dan membuat PR uji (AC G.1); lalu mulai 0.3 (dev infra lokal), 0.4 (kontrak ekstensibilitas), C.1 (ERD dan DDL).
 - **Area berkas milik track ini:** /server, /deploy
 - **Key Files Modified:** `go.work`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.gitignore`, `README.md`, `server/`, `desktop/`, `web/`
 - **Dependensi lintas track:** kontrak v0 belum dibekukan (C.8). Gunakan mock server (C.7) untuk pekerjaan yang butuh server.
@@ -32,6 +32,10 @@
 17. Git Bash tidak punya `python3`; pakai `python` (3.12.10). Perintah yang mengubah repo dijalankan di Git Bash, bukan WSL.
 18. Issue baru dibuat setelah merge 0.1 (sebelumnya tidak ada issue). PR #1 memakai nomor #1, jadi issue mulai dari #2 (G.1 = #2, 0.1 = #5). Pembuatan sempat terputus oleh error jaringan di issue ke-24; total akhir 60 issue.
 19. Penugasan issue ke Kontributor ditunda sampai undangan diterima: `--contrib-login` membuat script berhenti bila akun belum menjadi collaborator.
+20. BizzyReal sudah collaborator (role write, terkonfirmasi lewat API); CODEOWNERS valid (`codeowners/errors` kosong). 18 issue ber-PIC Kontributor ditugaskan ke BizzyReal.
+21. 56 issue open: 27 ke master-abror, 18 ke BizzyReal, 11 tanpa assignee (PIC "Berdua": 7.4, 7.1, 4.7, C.8, C.4, C.3; PIC "Fleksibel": 1C.1 sampai 1C.5). Script hanya menugaskan PIC Owner dan Kontributor.
+22. Project board belum ada saat G.3 ditutup. Dibuat lewat CLI setelah 0.1: `NizMeet Board` (project 1, private), ditautkan ke repo, 60 issue ditambahkan lewat `gh project item-add`. Empat issue selesai (G.1 sampai G.3, 0.1) berstatus Done. Opsi Status memakai bawaan GitHub (Todo, In Progress, Done) dan dipertahankan; lima kolom di dokumen tidak diterapkan.
+23. Terbuka (keputusan Owner): required status checks dan squash-only di ruleset, `package.json.md5`, pin eksak versi, status LTS Node, peringatan Vite 8 di desktop, dan akses BizzyReal ke board (board private; izin project terpisah dari izin repo).
 
 ## Log Checkpoint (terbaru di atas)
 

@@ -8,7 +8,7 @@
 | Track | PIC | Milestone aktif | Berkas status | Diperbarui |
 | --- | --- | --- | --- | --- |
 | S Server | Owner | 0.1 selesai → 0.3 / 0.4 / C.1 | docs/handover/server.md | 2026-10-23 |
-| D Desktop | Kontributor | 0.2 / 2.1 / 3.1 (menunggu undangan) | docs/handover/desktop.md | - |
+| D Desktop | Kontributor (BizzyReal) | 0.2 / 2.1 / 3.1 (siap dikerjakan) | docs/handover/desktop.md | -|
 | W Web | Fleksibel | belum dialokasikan | docs/handover/web.md | - |
 
 **Titik sinkron berikutnya:** #1 Kontrak v0 beku (C.8)
