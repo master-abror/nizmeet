@@ -14,4 +14,38 @@
 
 ## Log Checkpoint (terbaru di atas)
 
+### 2026-10-24 17:34 — 0.2 Tooling & CI
+
+**CHECKPOINT STATEMENT**
+- **Track / Milestone:** D (Desktop) / 0.2 Tooling & CI (issue #6)
+- **Branch & commit terakhir:** `feat/0.2-tooling-ci`, commit `14fb361` (tahap a). Draft PR #66.
+- **Selesai:** tahap (a): `Makefile` dan `tools/zip_source.py`. Sudah diuji di mesin Kontributor: `make help`, `make doctor`, `make -n lint test build`, `make tools`, `make test`, `make build-server`, `make zip`. Semuanya lolos.
+- **Belum dikerjakan:** (b) `.golangci.yml` dan svelte-check, (c) workflow GitHub Actions, (d) update handover ini.
+- **Lingkungan Kontributor:** Windows, Git Bash, Go 1.27.3, Node v24.22.1, pnpm 12.15.0, Wails v2.16.0, GNU Make 4.4.1 (via Scoop), golangci-lint 2.14.0 (built with go1.27.3, via `make tools`), Python 3.10.
+- **Struktur repo (terkonfirmasi):** `server/go.mod`, `desktop/go.mod`, `go.work` ada. `desktop/frontend/package.json` sudah punya script `build` dan `check` serta devDependency `svelte-check ^4.0.0`, jadi `pnpm-lock.yaml` tidak perlu berubah. `desktop/frontend/dist/.gitkeep` terlacak git.
+- **Berkas diubah (di commit 14fb361):**
+  - `Makefile` (root): `GOLANGCI_LINT_VERSION ?= v2.14.0`; target `lint` (= `lint-go` + `lint-frontend`, memakai `--config $(CURDIR)/.golangci.yml`), `test`, `build` (= `build-server` + `build-desktop`), `deps`, `tools`, `doctor`, `zip`, `ensure-dist`, `check-golangci-lint`, `print-golangci-lint-version`.
+  - `tools/zip_source.py`: mengecualikan `.git`, `node_modules`, `build/`, `*.exe`, `.env` dan `.env.*` (kecuali `.env.example`).
+  - **Belum disentuh:** `.golangci.yml`, `.github/workflows/`, `README.md`.
+- **Keputusan:**
+  1. golangci-lint di-pin v2.14.0 hanya di Makefile. Workflow membaca lewat `make -s print-golangci-lint-version`. Dukungan Go 1.27 mulai v2.13.0.
+  2. Dipasang lewat `make tools` (`go install`), bukan `install.sh`. Cara pasang di CI diputuskan di tahap (c).
+  3. `repo-hygiene` tidak dihapus. Hanya menambah job `ci`. Mengganti required check adalah tugas Owner setelah merge.
+  4. `make build` (`wails build -s`) tidak masuk CI. CI hanya lint dan test.
+  5. Tanpa `-race` pada `go test` (butuh CGO; ADR-0001 mensyaratkan SQLite tanpa CGO).
+  6. `make zip` mengecualikan semua folder `build/` sesuai Master Plan, termasuk `desktop/build/` milik Wails. Bila perlu, lampirkan terpisah.
+  7. Aturan Kontributor: kode `/server` tidak diubah (bila lint atau test server gagal atau butuh PostgreSQL/Redis, berhenti dan laporkan); `pnpm-lock.yaml` dan `go.work` tidak diubah tanpa memberi tahu dulu; kerja per tahap; tiap commit pakai `git add` path eksplisit dan Kontributor menempel `git status --short` dulu.
+- **Langkah berikutnya:**
+  1. **Tahap (b):** buat `.golangci.yml` di root (format v2, mulai dengan `version: "2"`). Verifikasi `make lint-go` dan `make lint-frontend`. Peringatan plugin Svelte vs Vite 8 bukan kegagalan. Bila temuan lint menumpuk di kode yang bukan milik Track D, longgarkan konfigurasi, jangan memperbaiki kode itu.
+  2. **Tahap (c):** buat `.github/workflows/ci.yml` dengan job bernama persis `ci` di runner Windows, `shell: bash`. Pakai versi pin README (Go 1.27.1, Node v24.21.0, pnpm 12.15.0), `pnpm install --frozen-lockfile`, dan versi golangci-lint dari Makefile. Verifikasi dulu apakah `make` tersedia di runner Windows. Jangan ubah `repo-hygiene`.
+  3. **Tahap (d):** perbarui berkas ini (Current Milestone, Branch/Tag, Completed Features, Key Files Modified, In-Progress/Next Task, Context).
+  4. Sebelum Ready for review: `git fetch origin && git rebase origin/main`, lalu `make test`. Ubah Draft PR #66 menjadi Ready hanya bila semua AC terpenuhi.
+- **Belum teruji / pertanyaan terbuka:**
+  - `make build` / `wails build -s`: apakah `-s` mencegah `package.json.md5` muncul, dan apakah Wails mengubah `desktop/frontend/wailsjs/`. Cek `git status --short` setelah menjalankannya.
+  - `make lint`: baru bisa jalan setelah tahap (b).
+  - `make test` lolos lokal, tetapi kedua modul masih `[no test files]`, jadi belum membuktikan apa pun soal kebutuhan PostgreSQL/Redis.
+- **Catatan untuk Owner:**
+  - Tambahkan baris `golangci-lint v2.14.0 (di-pin di Makefile)` ke tabel versi `README.md` (tidak diubah di PR ini).
+  - Setelah merge: ganti required status check dari `repo-hygiene` ke `ci`, buat tag `v0.0.2`, perbarui `HANDOVER.md`, tutup issue #6.
+
 (belum ada)
