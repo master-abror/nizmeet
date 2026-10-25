@@ -1,18 +1,32 @@
 # HANDOVER — TRACK D (Desktop)
 
 - **PIC:** Kontributor (BizzyReal)
-- **Current Milestone:** 0.2 Tooling & CI (issue #6)
-- **Branch / Tag terakhir:** belum ada branch kerja / tag terakhir di `main`: v0.0.1
+- **Current Milestone:** 0.2 Tooling & CI (issue #6). Selesai di sisi Kontributor, menunggu review Owner (Draft PR #66).
+- **Branch / Tag terakhir:** branch `feat/0.2-tooling-ci` (PR #66). Tag terakhir di `main`: v0.0.1. Tag `v0.0.2` dibuat Owner setelah merge.
 - **Completed Features:**
-  - (belum ada)
-- **In-Progress / Next Task:** Kerjakan 0.2 di branch `feat/0.2-tooling-ci`: `Makefile` (`lint`, `test`, `build`), golangci-lint, `svelte-check`, GitHub Actions (lint dan test server serta desktop di runner Windows). Lalu 2.1 → 2.2 → 2.3, dan prototipe 3.1 → 3.2 lebih awal (risiko terbesar).
+  - 0.2 Tooling & CI: `Makefile` (`lint`, `test`, `build`, `deps`, `tools`, `doctor`, `zip`), konfigurasi golangci-lint v2 (set `standard`), `svelte-check` lewat `make lint-frontend`, workflow GitHub Actions job `ci` (runner `windows-2025`, `shell: bash`), dan `make zip` (opsional).
+  - Acceptance Criteria 0.2 terpenuhi: job `ci` dan `repo-hygiene` hijau di PR #66, dan `make lint test` berjalan lokal dengan 0 issues.
+- **In-Progress / Next Task:** Setelah PR 0.2 ter-merge: 2.1 → 2.2 → 2.3, dan prototipe 3.1 → 3.2 lebih awal (risiko terbesar). Backlog dari 0.2:
+  - Milestone 2.2: tambahkan `depguard` di `.golangci.yml` untuk aturan isolasi Wails (ADR-0001) saat package `desktop/internal/engine` dibuat.
+  - `svelte-check` menyarankan opsi `verbatimModuleSyntax` di `desktop/frontend/tsconfig.json`. Bisa mengubah impor tipe di kode Svelte, jadi dikerjakan terpisah.
+  - `make build` (`wails build -s`) belum diuji dan tidak masuk CI: cek apakah `-s` mencegah `package.json.md5` muncul dan apakah Wails mengubah `desktop/frontend/wailsjs/`.
+  - Kedua modul Go masih `[no test files]`. Cek kebutuhan PostgreSQL/Redis di CI saat tes pertama ditambahkan.
 - **Area berkas milik track ini:** /desktop, /tools. **Pengecualian untuk 0.2:** boleh mengubah `Makefile`, `.github/workflows/`, dan konfigurasi lint di root; PR ditinjau Owner (Master Plan Bagian 2). Menjadikan job `ci` sebagai required status check di ruleset dilakukan Owner.
 - **Key Files Modified:**
-  - (belum ada)
+  - `Makefile`, `tools/zip_source.py`
+  - `.golangci.yml`
+  - `.github/workflows/ci.yml`
+  - `docs/handover/desktop.md`
 - **Dependensi lintas track:** kontrak v0 belum dibekukan (C.8). Gunakan mock server (C.7) untuk pekerjaan yang butuh server.
-- **Context / Special Notes:** Wails v2 (ADR-0001). Versi ter-pin ada di `README.md` (Go 1.27.1, Node v24.21.0, pnpm 12.15.0, Wails v2.16.0). Baca `docs/MASTER_PLAN_V2.2.md` Bagian 2 dan 5. Jebakan yang sudah ditemukan di 0.1 ada di `docs/handover/server.md` (penyimpangan 1–23), terutama: `vite build` dan `wails dev` menghapus `desktop/frontend/dist/.gitkeep`; `desktop/frontend/package.json.md5` ikut ter-commit; repo jangan di OneDrive; di Git Bash pakai `python`, bukan `python3`; build lulus walau ada peringatan plugin Svelte vs Vite 8.
+- **Context / Special Notes:** Wails v2 (ADR-0001). Versi ter-pin ada di `README.md` (Go 1.27.1, Node v24.21.0, pnpm 12.15.0, Wails v2.16.0). Baca `docs/MASTER_PLAN_V2.2.md` Bagian 2 dan 5. Jebakan yang sudah ditemukan di 0.1 ada di `docs/handover/server.md` (penyimpangan 1–23), terutama: `vite build` dan `wails dev` menghapus `desktop/frontend/dist/.gitkeep`; `desktop/frontend/package.json.md5` ikut ter-commit; repo jangan di OneDrive; di Git Bash pakai `python`, bukan `python3`; build lulus walau ada peringatan plugin Svelte vs Vite 8. Tambahan dari 0.2: golangci-lint di-pin v2.14.0 hanya di `Makefile` (variabel `GOLANGCI_LINT_VERSION`), dipasang lewat `make tools`, dan CI membacanya lewat `make -s print-golangci-lint-version`. `make` tidak ada di image runner, jadi CI memasangnya lewat Chocolatey. `make ensure-dist` menjaga `desktop/frontend/dist/.gitkeep`. Tanpa `-race` di `go test` karena butuh CGO. `repo-hygiene` tidak dihapus.
 
 ## Log Checkpoint (terbaru di atas)
+
+### 2026-10-25 — 0.2 Tooling & CI (tahap d, siap review)
+
+- Tahap (a) sampai (d) selesai di branch `feat/0.2-tooling-ci` (PR #66). Hash commit lama di entri checkpoint di bawah sudah usang karena branch di-rebase ke `main` setelah PR #65 ter-merge. Rujuk PR #66, bukan hash.
+- Verifikasi: job `ci` dan `repo-hygiene` hijau di PR. `make lint test` lokal: 0 issues (server dan desktop), svelte-check 0 errors dan 0 warnings.
+- Untuk Owner: tambahkan baris `golangci-lint v2.14.0 (di-pin di Makefile)` ke tabel versi `README.md`. Setelah merge: ganti required status check dari `repo-hygiene` ke `ci`, buat tag `v0.0.2`, perbarui `HANDOVER.md`, tutup issue #6.
 
 ### 2026-10-24 17:34 — 0.2 Tooling & CI
 
