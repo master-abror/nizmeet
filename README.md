@@ -41,4 +41,4 @@ Status: tahap perencanaan dan scaffolding. Rencana lengkap: [`docs/MASTER_PLAN_V
 | PostgreSQL / Redis | 18.`__` / `____` (Milestone 0.3) |
 
 ## Memulai
-Lihat `CONTRIBUTING.md` dan `docs/onboarding/CONTRIBUTOR_ONBOARDING.md`.
+Baca `CONTRIBUTING.md` dan `docs/onboarding/CONTRIBUTOR_ONBOARDING.md`.

@@ -1,0 +1,47 @@
+# golangci-lint v2: Milestone 0.2 (Tooling & CI), Track D
+#
+# Satu konfigurasi untuk dua modul Go (server dan desktop). Dipanggil dari
+# Makefile (make lint-go) per modul: cd <modul> && golangci-lint run --config <berkas ini> ./...
+# Versi golangci-lint di-pin di Makefile (GOLANGCI_LINT_VERSION), bukan di sini.
+#
+# Prinsip: mulai dari set standar, jangan memperbaiki kode yang bukan milik
+# Track D. Bila temuan menumpuk di kode lain, longgarkan lewat blok
+# linters.exclusions di bawah (lihat contoh yang di-comment), jangan ubah kodenya.
+
+version: "2"
+
+run:
+  # Path pada exclusions dihitung relatif terhadap lokasi berkas ini (root repo),
+  # sehingga pola "^server/" dan "^desktop/" bekerja walau dijalankan dari dalam modul.
+  relative-path-mode: cfg
+  timeout: 5m
+  tests: true
+
+linters:
+  # Set standar v2: errcheck, govet, ineffassign, staticcheck, unused.
+  default: standard
+  exclusions:
+    # Berkas hasil generate (mis. kode otomatis) dilewati.
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+      - legacy
+    rules:
+      # Tes boleh mengabaikan error dari pemanggilan pembantu.
+      - path: _test\.go
+        linters:
+          - errcheck
+    # --- Contoh pelonggaran bila temuan menumpuk di kode server (aktifkan hanya bila perlu) ---
+    # paths:
+    #   - ^server/
+    # atau per linter:
+    # rules:
+    #   - path: ^server/
+    #     linters:
+    #       - staticcheck
+    #       - unused
+
+# Formatter (gofmt/goimports) sengaja belum diaktifkan: akan menandai kode
+# server yang belum diformat dan di luar lingkup issue #6.
