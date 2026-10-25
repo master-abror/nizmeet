@@ -373,7 +373,7 @@ Belum diputuskan. Default menjelaskan apa yang saat ini dipakai di `ddl.sql`. Se
 | Q3 | Nilai retensi (bagian 5). | Usulan di bagian 5. | C.6 |
 | Q4 | `payments`: ikut terhapus atau dianonimkan saat hapus akun (kewajiban pencatatan keuangan)? Bentuk dan penomoran invoice (1C.2)? | Semua `CASCADE`. Tidak ada kolom invoice. | C.6 (review hukum) |
 | Q5 | Enkripsi at-rest: level disk/volume atau kolom? Enkripsi kolom pada `body`/`content` akan merusak FTS. | Tidak ada enkripsi kolom di DDL. | C.6 / 7.2 |
-| Q6 | Konfigurasi FTS Indonesia dan Inggris belum diverifikasi (4.2). | `fts_config regconfig` per baris, default `simple`. Aplikasi memilih konfigurasi dari `documents.lang`. | 4.2 |
+| Q6 | Konfigurasi `indonesian` dan `english` **tersedia** di PostgreSQL 18.6 (diverifikasi saat validasi C.1). Yang belum diputuskan: konfigurasi mana yang dipakai per bahasa dokumen dan kualitas retrieval-nya (4.2). | `fts_config regconfig` per baris, default `simple`. Aplikasi memilih konfigurasi dari `documents.lang`. | 4.2 |
 | Q7 | Bentuk namespace modul (schema PG atau prefiks tabel); ADR-0003 belum ada. | Schema `hello`. | 0.4 |
 | Q8 | Deteksi device clone (2.5) dan pemartisian `usage_events`. | Ditunda; keduanya dapat ditambahkan secara aditif. | 1.4 / 2.5 / 7.1 |
 | Q9 | Transkrip memuat ucapan lawan bicara (data pribadi pihak ketiga): dasar persetujuan, retensi riwayat, dan perlakuan saat ekspor/hapus. | Tidak ada purge otomatis; hapus oleh pengguna atau saat hapus akun. | C.6 (review hukum) |
