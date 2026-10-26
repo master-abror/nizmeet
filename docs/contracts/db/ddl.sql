@@ -828,7 +828,7 @@ COMMENT ON TABLE live_sessions IS 'Riwayat sesi live; sync kind live_sessions. D
 -- Tujuan : transkrip FINAL per ucapan dalam satu sesi live (bahasa asli +
 --          terjemahan ucapan). Transkrip interim tidak disimpan.
 -- Menulis: server (Live Session Service, append-only selama sesi).
--- Membaca: server, sync (dikirim bersama live_sessions), portal.
+-- Membaca: server, sync (diambil per sesi, dipaginasi per seq), portal.
 -- Catatan: speaker = penanda pembicara dari mixer audio (mis. 'user',
 --          'interlocutor'); himpunan nilai final ditetapkan di protokol WS (C.3).
 -- -----------------------------------------------------------------------------

@@ -273,7 +273,7 @@ erDiagram
 | `profiles` | Profil karier (satu per pengguna): headline, ringkasan, skills, bahasa. | API profil | Server, portal |
 | `documents` | Dokumen (`type` = string registry: cv, jd, note, portfolio, presentation, ...). **Resource sync kind `documents`.** File asli di object storage (`blob_key`), `lang` dari parser, `status` parse async. Soft delete dengan tombstone. | Documents API, parser | Server, sync, retriever, portal |
 | `document_versions` | Riwayat versi; tiap unggah/edit/restore membuat versi baru. `body` berisi teks. Versi lama dapat dipulihkan. | Documents API | Server, portal |
-| `document_chunks` | Chunk teks versi aktif (dibuat server) + `fts` untuk PgRetriever. `tags jsonb` = metadata mentah hasil ekstraksi (skill, perusahaan, peran, periode). ID chunk berubah pada re-chunk. | Chunker | Retriever, sync, portal |
+| `document_chunks` | Chunk teks versi aktif (dibuat server) + `fts` untuk PgRetriever. `tags jsonb` = metadata mentah hasil ekstraksi (skill, perusahaan, peran, periode). ID chunk berubah pada re-chunk; set chunk diganti utuh (bagian 4 butir 8). | Chunker | Retriever, sync, portal |
 | `tags` | Registri tag kanonik. `user_id` NULL = global; terisi = tag buatan pengguna. | Seed/admin, ekstraksi, API | Retriever, profil, portal |
 | `tag_aliases` | Alias → tag kanonik (go = golang), lintas bahasa. Cakupan (`user_id`) harus sama dengan tag induknya (trigger). | Seed/admin, API | Ekstraksi, retriever, Fast-Pass |
 | `chunk_tags` | Tag kanonik per chunk; dasar boost/filter. Tag harus global atau milik pengguna yang sama (trigger). | Chunker/tagger | Retriever, sync |
@@ -290,7 +290,7 @@ erDiagram
 | Tabel | Tujuan | Ditulis oleh | Dibaca oleh |
 | --- | --- | --- | --- |
 | `live_sessions` | Riwayat sesi live. **Resource sync kind `live_sessions`.** `profile_snapshot` = Session Profile efektif saat mulai. Mode "tanpa simpan" (6.2) berarti **tidak ada baris** di tabel ini maupun `transcript_segments`. Audio mentah tidak pernah disimpan. | Live Session Service | Server, sync, portal |
-| `transcript_segments` | Transkrip **final** per ucapan: `seq`, `speaker`, `lang`, `content`, terjemahan ucapan, offset waktu. Append-only selama sesi. Transkrip interim tidak disimpan. | Live Session Service | Server, sync, portal |
+| `transcript_segments` | Transkrip **final** per ucapan: `seq`, `speaker`, `lang`, `content`, terjemahan ucapan, offset waktu. Append-only selama sesi. Transkrip interim tidak disimpan. Tidak dibundel dengan `live_sessions`: diambil per sesi, dipaginasi per `seq` (bagian 4 butir 9). | Live Session Service | Server, sync, portal |
 
 ### Sync
 
@@ -310,15 +310,36 @@ erDiagram
 
 ## 4. Mekanisme sync pada skema
 
-Ringkasan agar C.4 dan Kontributor (sudut pandang klien sync) dapat meninjau. Spesifikasi lengkap ada di `sync-spec.md` (C.4).
+Ringkasan agar C.4 dan Kontributor (sudut pandang klien sync) dapat meninjau. Spesifikasi lengkap ada di `sync-spec.md` (C.4). Bagian ini mencerminkan keputusan D9 sampai D11 dan masukan review PR #67.
 
 1. **Kind sync MVP:** `documents`, `session_profiles`, `live_sessions`. Klien mengabaikan kind yang tidak dikenal.
-2. **Pull:** per kind, `WHERE user_id = $1 AND revision > $cursor ORDER BY revision`, ditambah baris `tombstones` untuk kind yang sama (`ix_tombstones__user_kind_revision`). Untuk `documents`, feed upsert memfilter `deleted_at IS NULL`; penghapusan datang dari tombstone.
-3. **Push:** mutasi membawa `client_mutation_id` dan `If-Match: <revision>`. Server mencatat hasil di `sync_mutations` dalam transaksi yang sama dengan mutasi. Pengiriman ulang dengan ID yang sama tidak menggandakan data. Revisi basi ditolak `409` (server menang; versi lama ada di `document_versions`).
-4. **Ack:** `POST /sync/ack` memperbarui `sync_cursors.acked_revision`.
-5. **Anak resource:** `document_chunks` + `chunk_tags` dikirim bersama `documents`; `transcript_segments` bersama `live_sessions`. Anak tidak punya `revision` sendiri; perubahan anak ditandai lewat kenaikan revisi induk. Revisi `live_sessions` naik saat sesi dimulai, berakhir, atau diubah, **tidak** per segmen (lihat Q11).
-6. **Cursor kedaluwarsa:** bila `cursor` lebih tua dari tombstone tertua yang masih disimpan, klien harus melakukan sinkronisasi penuh (cursor kosong). Aturan rinci ada di C.4.
-7. **Cascade hapus akun:** trigger `assign_revision` dan `record_tombstone` melewati pengguna yang sudah tidak ada, sehingga `DELETE FROM users` tidak gagal oleh trigger sync.
+2. **`revision`:** `bigint` opaque, monoton naik per pengguna, dan **boleh melompat** karena satu counter dipakai bersama semua kind dan tombstone. Setiap nilai dikeluarkan sekali per pengguna. Klien hanya boleh membandingkan (`>`, `=`) dan tidak boleh mengasumsikan kenaikan satu per satu.
+3. **Arah sync per kind (D9):**
+
+   | Kind / tabel | Desktop menulis? | Keterangan |
+   | --- | --- | --- |
+   | `documents` | Ya, untuk unggahan baru lewat outbox | Apakah desktop boleh mengedit atau menghapus dokumen belum diputuskan (Q14). |
+   | `session_profiles` | Ya (buat, ubah, hapus preset) | |
+   | `live_sessions` | Tidak | Ditulis Live Session Service. Cara pengguna menghapus riwayat sesi dari desktop belum diputuskan (Q14). |
+   | `document_chunks`, `chunk_tags`, `transcript_segments`, `document_versions` | Tidak | Turunan server; baca saja. |
+
+   Untuk pembuatan lewat outbox, klien membuat `id` UUID v7 sendiri (kolom `id DEFAULT uuidv7()` menerimanya). Server memvalidasi bentuknya; tabrakan dengan ID milik pengguna lain ditolak tanpa mengungkap keberadaannya.
+4. **Pull:** per kind, `WHERE user_id = $1 AND revision > $cursor ORDER BY revision`, ditambah baris `tombstones` untuk kind yang sama (`ix_tombstones__user_kind_revision`). Untuk `documents`, feed upsert memfilter `deleted_at IS NULL`; penghapusan datang dari tombstone.
+5. **Siklus hidup tombstone:**
+   - `documents`: hapus (soft delete) membuat tombstone dengan `revision` sama dengan revisi dokumen setelah hapus. Memulihkan **menghapus** tombstone dan menaikkan revisi dokumen. Hapus lagi membuat tombstone baru dengan revisi lebih tinggi. Contoh: hapus (rev 10) lalu tombstone@10; pulihkan (rev 11) lalu tombstone hilang dan dokumen@11; hapus lagi (rev 12) lalu tombstone@12. Tidak pernah ada baris hidup dan tombstone bersamaan untuk satu dokumen.
+   - `session_profiles` dan `live_sessions`: `DELETE` plus tombstone; ID tidak dipakai ulang.
+   - **Aturan klien:** untuk satu resource, item dengan revisi tertinggi (baris atau tombstone) menang; item berrevisi lebih rendah dari yang sudah diterapkan diabaikan.
+6. **Push:** mutasi membawa `client_mutation_id` dan `If-Match: <revision>`. Server mencatat hasil di `sync_mutations` dalam transaksi yang sama dengan mutasi. Pengiriman ulang dengan ID yang sama tidak menggandakan data. Revisi basi ditolak `409` **beserta data server terbaru** (AC 1B.3; server menang, versi lama ada di `document_versions`); klien memberi tahu pengguna bahwa perubahan lokalnya tertimpa.
+7. **Ack:** `POST /sync/ack` memperbarui `sync_cursors.acked_revision`.
+8. **Anak resource (D10):**
+   - `document_chunks` dan `chunk_tags` **diganti utuh** (replace, bukan merge) setiap kali dikirim; payload selalu lengkap, bukan delta. Anak tidak punya `revision` sendiri.
+   - `tags` bukan kind sync. Karena itu setiap tag pada payload membawa `slug`, `label`, dan `kind`; alias tag hanya ada di server. `session_profiles.focus_tags` memakai slug yang sama.
+   - Chunk dan `chunk_tags` disertakan pada payload dokumen **hanya bila** `document_chunks.doc_revision` set itu lebih besar dari cursor klien; bila tidak, klien sudah memilikinya. Dokumen yang belum `ready` dikirim tanpa chunk.
+   - **Invarian wajib:** set chunk tak berubah per revisi dokumen. Setiap perubahan chunk atau `chunk_tags` (termasuk ekstraksi ulang tag) berupa penggantian seluruh set dalam transaksi yang sama dengan `UPDATE documents` yang menerbitkannya, dan semua chunk memakai `revision` hasil UPDATE itu (`RETURNING revision`). Bila chunk disisipkan di transaksi lain, klien dengan cursor yang sama tidak akan pernah menerimanya.
+   - Pemicu revisi tidak diubah: setiap `UPDATE` dokumen menaikkan revisi (Q13 terjawab, D10).
+9. **Segmen transkrip (D11):** `live_sessions` (header) adalah kind sync; `transcript_segments` **tidak** dibundel. Segmen diambil per sesi dengan cursor `seq`, dipaginasi, karena sesi bisa berjam-jam. Kunci lokal di desktop `(session_id, seq)` dengan upsert idempoten. Revisi `live_sessions` naik saat sesi dimulai, berakhir, atau diubah, tidak per segmen; perangkat lain mengambil segmen sesi aktif sesuai kebutuhan lewat `seq`. Event transkrip final di protokol WebSocket (C.3) harus membawa `session_id` dan `seq` yang sama dengan `transcript_segments`, agar baris lokal dari tampilan live dan baris dari sync bertemu.
+10. **Cursor kedaluwarsa dan sync penuh:** device tanpa baris di `sync_cursors` melakukan sync penuh (cursor kosong). Bila `now() - sync_cursors.updated_at` melebihi masa retensi tombstone (bagian 5, Q3), device wajib sync penuh: tombstone yang dibuat setelah ack terakhirnya baru bisa terhapus bila ack itu sendiri lebih tua dari masa retensi. Pada sync penuh server mengirim seluruh ID per kind dan klien **merekonsiliasi**: setelah sync penuh selesai, baris lokal yang tidak ada di server dihapus, karena tombstone lama sudah tidak tersedia. Aturan rinci ada di C.4.
+11. **Hapus akun dan hapus lokal:** trigger `assign_revision` dan `record_tombstone` melewati pengguna yang sudah tidak ada, sehingga `DELETE FROM users` tidak gagal oleh trigger sync. Saat desktop menerima tombstone, baris lokal beserta anaknya (chunk, `chunk_tags`, segmen transkrip) dihapus. Retensi dan enkripsi salinan lokal (transkrip memuat ucapan pihak ketiga) ditinjau di 2.3/6.2 sesuai ADR-0002 bagian Privasi (Q9).
 
 ## 5. Kebijakan retensi
 
@@ -361,6 +382,9 @@ Semua tabel milik pengguna punya `user_id` dan indeks berawalan `user_id`. Penge
 | D6 | Status: `documents` `pending/processing/ready/failed`; `subscriptions` `pending/active/canceled/expired`; `payments` `pending/paid/failed/refunded`. | Himpunan minimal dari kebutuhan parse async dan refund/cancel (1B.2, 1.6). |
 | D7 | Riwayat sesi live dan transkrip disimpan di cloud (`live_sessions`, `transcript_segments`); sync kind ketiga `live_sessions`. | Keputusan Owner untuk Q1. Mode "tanpa simpan" tidak membuat baris apa pun. |
 | D8 | `sync_mutations` dan `sync_counters` ditambahkan. | Dituntut ADR-0002 butir 4 (idempotensi) dan butir 2 (revisi monoton); tidak tercantum eksplisit di daftar tabel Master Plan. |
+| D9 | Arah sync: desktop menulis `documents` (unggahan baru) dan `session_profiles`; kind dan tabel lain baca saja. ID dibuat klien (UUID v7). | Master Plan Bagian 0 butir 2 dan 2.6 (outbox untuk unggahan), Session Setup (simpan preset); review PR #67. |
+| D10 | Q13 dijawab: pemicu revisi tidak diubah (setiap `UPDATE` menaikkan revisi). Chunk dan `chunk_tags` ikut payload hanya bila `doc_revision` set > cursor, dengan invarian: set diganti utuh dalam transaksi yang sama dengan `UPDATE documents`. | Menghindari pengiriman ulang chunk tanpa mengubah DDL; invarian mencegah chunk hilang. |
+| D11 | Q11 dijawab: segmen transkrip diambil per sesi, dipaginasi per `seq`, terpisah dari `live_sessions`. | Sesi bisa berjam-jam; `UNIQUE (session_id, seq)` mendukungnya. |
 
 ## 8. OPEN QUESTION
 
@@ -376,8 +400,9 @@ Belum diputuskan. Default menjelaskan apa yang saat ini dipakai di `ddl.sql`. Se
 | Q6 | Konfigurasi `indonesian` dan `english` **tersedia** di PostgreSQL 18.6 (diverifikasi saat validasi C.1). Yang belum diputuskan: konfigurasi mana yang dipakai per bahasa dokumen dan kualitas retrieval-nya (4.2). | `fts_config regconfig` per baris, default `simple`. Aplikasi memilih konfigurasi dari `documents.lang`. | 4.2 |
 | Q7 | Bentuk namespace modul (schema PG atau prefiks tabel); ADR-0003 belum ada. | Schema `hello`. | 0.4 |
 | Q8 | Deteksi device clone (2.5) dan pemartisian `usage_events`. | Ditunda; keduanya dapat ditambahkan secara aditif. | 1.4 / 2.5 / 7.1 |
-| Q9 | Transkrip memuat ucapan lawan bicara (data pribadi pihak ketiga): dasar persetujuan, retensi riwayat, dan perlakuan saat ekspor/hapus. | Tidak ada purge otomatis; hapus oleh pengguna atau saat hapus akun. | C.6 (review hukum) |
+| Q9 | Transkrip memuat ucapan lawan bicara (data pribadi pihak ketiga): dasar persetujuan, retensi riwayat, perlakuan saat ekspor/hapus, dan retensi serta enkripsi salinan lokal di SQLite desktop. | Tidak ada purge otomatis di cloud; hapus oleh pengguna atau saat hapus akun. Salinan lokal dihapus saat tombstone diterima. | C.6 (review hukum), 2.3/6.2 |
 | Q10 | Perubahan Session Profile di tengah sesi (`session:update`) dan himpunan nilai `speaker`. | `profile_snapshot` hanya menyimpan profil saat mulai; `speaker` berupa teks bebas tidak kosong. | C.3 |
-| Q11 | Cara sync `transcript_segments` dan kapan revisi `live_sessions` naik (saat selesai saja, atau berkala). | Revisi naik saat mulai/selesai/ubah; segmen dikirim bersama sesi. | C.4 |
+| Q11 | **Terjawab (D11):** segmen diambil per sesi, dipaginasi per `seq`; revisi `live_sessions` naik saat mulai/selesai/ubah. | Sama dengan jawaban. | Selesai; rinciannya di C.4 |
 | Q12 | Row-Level Security sebagai pertahanan berlapis di atas scope `user_id` di repository. | Tidak ada RLS. Isolasi: scope repository + FK komposit + test isolasi. | 1B.1 / 7.2 |
-| Q13 | `revision` naik pada **setiap** `UPDATE` resource sync, termasuk perubahan internal (mis. status parse). Apakah perlu dibatasi agar tidak menambah lalu lintas sync? | Setiap `UPDATE` menaikkan revisi. | C.4 |
+| Q13 | **Terjawab (D10):** pemicu revisi tidak diubah; kiriman ulang chunk dicegah lewat aturan payload dan invarian bagian 4 butir 8. | Sama dengan jawaban. | Selesai; rinciannya di C.4 |
+| Q14 | Apakah desktop boleh mengedit atau menghapus `documents`, dan bagaimana pengguna menghapus riwayat sesi (`live_sessions`) dari desktop? | Desktop hanya membuat dokumen baru (outbox); edit dan hapus dokumen lewat portal; penghapusan sesi belum didefinisikan. | C.4 / 2.6 |
