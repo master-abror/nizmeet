@@ -1,23 +1,23 @@
 # HANDOVER — TRACK S (Server)
 
 - **PIC:** Owner
-- **Current Milestone:** 0.1 selesai (tag v0.0.1). C.1 (ERD & DDL draf, Track X) selesai di tingkat draf di branch `feat/c.1-erd-ddl`, menunggu review Kontributor dan merge → berikutnya 0.3 / 0.4 / C.2
-- **Branch / Tag terakhir:** feat/c.1-erd-ddl / v0.0.1 (tag `v0.10.1` dibuat Owner di `main` setelah squash merge C.1)
+- **Current Milestone:** 0.1 selesai (tag v0.0.1), 0.2 selesai (tag v0.0.2, Track D), C.1 selesai (tag v0.10.1, Track X) → berikutnya 0.3 / 0.4 / C.2
+- **Branch / Tag terakhir:** main / v0.10.1 (commit squash `6978e6d`, PR #67)
 - **Completed Features:**
   - [x] G.1–G.3 (Fase G)
   - [x] 0.1 Repo scaffolding & ADR awal: `/server` (Go, `slog` hello), `/desktop` (Wails v2 + Svelte 5 + Tailwind), `/web` (SvelteKit + Tailwind), `/packages/ui` (komponen `Button` dipakai di web dan desktop), `go.work`
-  - [x] C.1 (draf, belum merge) ERD & DDL: `docs/contracts/db/ddl.sql` (27 tabel: 26 di `public`, 1 di `hello`; berjalan bersih pada PostgreSQL 18.6 kosong dengan `psql -v ON_ERROR_STOP=1`, exit code 0) dan `docs/contracts/erd.md` (diagram Mermaid, penjelasan tabel, konvensi, mekanisme sync, retensi usulan, keputusan D1–D11, OPEN QUESTION Q1–Q14). Terbukti: setiap tabel ber-`user_id` punya indeks berawalan `user_id` (0 pelanggaran), semua tabel berkomentar, 27 tabel DB = 27 entitas ERD, `pg_dump --schema-only` lalu pulih berhasil, smoke test perilaku (`docs/contracts/db/smoke.sql`) lolos.
-  - [ ] C.1: review Kontributor dari sudut pandang klien sync (AC C.1). BizzyReal sudah mereview (status `COMMENTED`, 7 poin, tanpa perubahan tabel); ditanggapi di `erd.md` bagian 4 dan 8 (keputusan D9 sampai D11, Q14). Menunggu Approve.
+  - [x] C.1 (selesai; PR #67 squash `6978e6d`, tag `v0.10.1`; kontrak masih draf sampai C.8) ERD & DDL: `docs/contracts/db/ddl.sql` (27 tabel: 26 di `public`, 1 di `hello`; berjalan bersih pada PostgreSQL 18.6 kosong dengan `psql -v ON_ERROR_STOP=1`, exit code 0) dan `docs/contracts/erd.md` (diagram Mermaid, penjelasan tabel, konvensi, mekanisme sync, retensi usulan, keputusan D1–D11, OPEN QUESTION Q1–Q14). Terbukti: setiap tabel ber-`user_id` punya indeks berawalan `user_id` (0 pelanggaran), semua tabel berkomentar, 27 tabel DB = 27 entitas ERD, `pg_dump --schema-only` lalu pulih berhasil, smoke test perilaku (`docs/contracts/db/smoke.sql`) lolos.
+  - [x] C.1: review Kontributor dari sudut pandang klien sync (AC C.1). BizzyReal mereview (7 poin, tanpa perubahan tabel); ditanggapi di `erd.md` bagian 4 dan 8 (keputusan D9 sampai D11, Q14), lalu **Approved**. Diagram Mermaid dikonfirmasi tampil di pratinjau PR. Issue #9 CLOSED.
 - **In-Progress / Next Task:**
   1. Pastikan Kontributor (BizzyReal, sudah collaborator) menerima onboarding dan membuat PR uji (AC G.1).
-  2. Buka PR C.1 dari `feat/c.1-erd-ddl` (PR #67; label `contract` + `track:lintas`; `Closes #9`); minta BizzyReal meninjau `docs/contracts/erd.md` bagian 4 (mekanisme sync) dan keputusan D1, D2, D7. Merge dengan squash secara manual (ruleset belum memaksa squash-only, butir 16) dan tanpa bypass admin, karena AC C.1 mensyaratkan review Kontributor.
-  3. Setelah merge: Owner membuat tag `v0.10.1` di `main`, memperbarui baris di `HANDOVER.md` (indeks), menutup issue C.1 dan memindahkan kartu ke Done.
+  2. Owner: perbarui baris C.1 (tag `v0.10.1`) dan 0.2 (tag `v0.0.2`) di `HANDOVER.md` (indeks); periksa kartu #9 di board (issue sudah CLOSED).
+  3. Owner: ruleset `main-protection`: jadikan job `ci` required status check (sudah terbukti hijau pada PR docs-only #67); putuskan nasib `repo-hygiene` dan squash-only (butir 16). Status perubahan ini belum dikonfirmasi.
   4. Lanjut 0.3 (dev infra lokal), 0.4 (kontrak ekstensibilitas; menyelaraskan schema `hello` dan Q7 dengan ADR-0003), lalu C.2 (OpenAPI v1 draf: mulai dari `docs/contracts/erd.md` bagian 3, satu berkas per modul di `docs/contracts/openapi/`; setiap field harus ada di DDL atau diberi alasan, checklist C.8).
   5. OPEN QUESTION yang menjadi prasyarat: Q1 dan Q10 sebelum C.3; Q14 sebelum C.4 (Q11 dan Q13 sudah terjawab, D10 dan D11); Q3, Q4, Q9 di C.6; Q2 di awal 1.8.
   6. Syarat untuk spesifikasi berikutnya (dari review PR #67): C.3, event transkrip final di WebSocket membawa `session_id` dan `seq` yang sama dengan `transcript_segments`. C.4, tulis kontrak `409` (membawa data server terbaru), rekonsiliasi sync penuh (hapus baris lokal yang tidak ada di server), aturan cursor kedaluwarsa lewat `sync_cursors.updated_at`, dan invarian set chunk (`erd.md` bagian 4 butir 8).
 - **Area berkas milik track ini:** /server, /deploy
 - **Key Files Modified:** `go.work`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.gitignore`, `README.md`, `server/`, `desktop/`, `web/`; C.1: `docs/contracts/db/ddl.sql`, `docs/contracts/erd.md`, `docs/contracts/db/smoke.sql` (alat bantu validasi, bukan bagian kontrak), `docs/handover/server.md`
-- **Dependensi lintas track:** kontrak v0 belum dibekukan (C.8). Gunakan mock server (C.7) untuk pekerjaan yang butuh server. Skema DB draf C.1 ada di `docs/contracts/` (belum merge ke `main`). Track D menyelaraskan skema SQLite lokal (2.3) dengan DDL ini di C.4. Milestone 1.2 memecah `ddl.sql` menjadi migrasi per modul.
+- **Dependensi lintas track:** kontrak v0 belum dibekukan (C.8). Gunakan mock server (C.7) untuk pekerjaan yang butuh server. Skema DB draf C.1 ada di `docs/contracts/` (sudah di `main`, tag `v0.10.1`). Track D menyelaraskan skema SQLite lokal (2.3) dengan DDL ini di C.4. Milestone 1.2 memecah `ddl.sql` menjadi migrasi per modul.
 - **Context / Special Notes:** Wails v2 (ADR-0001). Versi: Go 1.27.1, Node v24.21.0 (status "LTS aktif" belum diverifikasi), pnpm 12.15.0, Wails v2.16.0, Svelte 5.57.2, SvelteKit 3.1.0, Vite 8.3.5, Tailwind 4.3.3, sv 1.1.1. `package.json` masih memakai rentang `^`; versi persis dikunci `pnpm-lock.yaml` (pin eksak per Bagian 0 butir 10 belum diterapkan; usul: Milestone 0.2).
 
 ### Catatan Milestone C.1
@@ -56,12 +56,12 @@
 
 ## Log Checkpoint (terbaru di atas)
 
-### 2026-10-25 — C.1 (selesai di tingkat draf, bukan checkpoint)
+### 2026-10-26 — C.1 selesai (batas milestone, bukan checkpoint)
 - **Track / Milestone:** X (dicatat di S) / C.1
-- **Branch & commit terakhir:** `feat/c.1-erd-ddl` / `docs(contracts): add ERD and draft PostgreSQL DDL` dan susulan `docs(contracts): record FTS config availability in ERD open question Q6`
-- **Ringkasan:** `ddl.sql` dan `erd.md` selesai dan tervalidasi pada PG 18.6 kosong; menunggu review Kontributor, konfirmasi render diagram, dan merge.
+- **Branch & commit terakhir:** `main` / `6978e6d docs(contracts): add ERD and draft PostgreSQL DDL (#67)`, tag `v0.10.1`
+- **Ringkasan:** `ddl.sql` dan `erd.md` selesai, tervalidasi pada PG 18.6 kosong (termasuk validasi ulang setelah review), di-approve BizzyReal, dan ter-merge. Isi `main` identik dengan commit yang disetujui.
 - **Berkas diubah:** lihat Key Files Modified.
 - **Keputusan yang diambil:** D1–D11 di `erd.md` bagian 7, termasuk transkrip di cloud (D7), arah sync per kind (D9), aturan chunk vs cursor (D10), dan segmen per `seq` (D11).
-- **Langkah berikutnya (persis):** buka PR berlabel `contract`; setelah merge tag `v0.10.1`; lalu 0.3 / 0.4 / C.2.
+- **Langkah berikutnya (persis):** Owner perbarui `HANDOVER.md` dan ruleset; lalu 0.3 (#7), 0.4 (#8), C.2.
 - **Blocker / pertanyaan terbuka:** OPEN QUESTION Q1–Q14 di `erd.md` bagian 8 (Q11 dan Q13 terjawab).
 - **Pesan commit WIP:** tidak ada (milestone selesai tanpa checkpoint).
