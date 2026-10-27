@@ -1,14 +1,14 @@
 # PROJECT HANDOVER — INDEKS
 
 - **Versi master plan:** V2.2
-- **Tag terakhir di `main`:** v0.0.1 (Milestone 0.1)
-- **Versi ter-pin:** Go 1.27.1 · Node v24.21.0 · pnpm 12.15.0 · Wails v2 v2.16.0 · PostgreSQL 18.[..] · Redis [..]
-- **Kontrak:** `docs/contracts/` — belum dibekukan (C.8: tidak)
+- **Tag terakhir di `main`:** v0.10.1 (Milestone C.1); sebelumnya v0.0.2 (0.2) dan v0.0.1 (0.1)
+- **Versi ter-pin:** Go 1.27.1 · Node v24.21.0 · pnpm 12.15.0 · Wails v2 v2.16.0 · PostgreSQL 18.6 · Redis [..]
+- **Kontrak:** `docs/contracts/` — draf C.1 (ERD dan DDL) sudah di `main`; belum dibekukan (C.8: tidak)
 
 | Track | PIC | Milestone aktif | Berkas status | Diperbarui |
 | --- | --- | --- | --- | --- |
-| S Server | Owner | 0.1 selesai → 0.3 / 0.4 / C.1 | docs/handover/server.md | 2026-10-23 |
-| D Desktop | Kontributor (BizzyReal) | 0.2 / 2.1 / 3.1 (siap dikerjakan) | docs/handover/desktop.md | -|
+| S Server | Owner | 0.1 dan C.1 selesai → 0.3 / 0.4 / C.2 | docs/handover/server.md | 2026-10-27 |
+| D Desktop | Kontributor (BizzyReal) | 0.2 selesai → 2.1 / 3.1 (siap dikerjakan) | docs/handover/desktop.md | -|
 | W Web | Fleksibel | belum dialokasikan | docs/handover/web.md | - |
 
 **Titik sinkron berikutnya:** #1 Kontrak v0 beku (C.8)
