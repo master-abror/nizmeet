@@ -11,7 +11,7 @@
   - [x] 0.3 (sebagian; tag belum dibuat): `deploy/docker-compose.yml` (PostgreSQL 18.6 + Redis 8.10.3, dipin eksak), `deploy/.env.example`, `deploy/scripts/dev-up.sh`. Terbukti oleh Owner (2026-10-27): `dev-up.sh` dijalankan dua kali (kedua kali sehat), `pg_isready` "accepting connections", `redis-cli ping` membalas `PONG`, `select version()` = PostgreSQL 18.6 dengan `data_directory` `/var/lib/postgresql/18/docker`, `deploy/.env` diabaikan git, password tidak ada di berkas lain. Belum: target `make dev-up` (menunggu PR Makefile), tag `v0.0.3`.
 - **In-Progress / Next Task:**
   1. Pastikan Kontributor (BizzyReal, sudah collaborator) menerima onboarding dan membuat PR uji (AC G.1).
-  2. Owner: perbarui baris C.1 (tag `v0.10.1`) dan 0.2 (tag `v0.0.2`) di `HANDOVER.md` (indeks); periksa kartu #9 di board (issue sudah CLOSED).
+  2. Baris C.1 dan 0.2 di `HANDOVER.md` (indeks) diperbarui lewat PR #68 (`a9824b4`, "update handover index after C.1 and 0.2"). Masih Owner: periksa kartu #9 di board (issue sudah CLOSED).
   3. Owner: ruleset `main-protection`: jadikan job `ci` required status check (sudah terbukti hijau pada PR docs-only #67); putuskan nasib `repo-hygiene` dan squash-only (butir 16). Status perubahan ini belum dikonfirmasi.
   4. Selesaikan 0.3 (lihat Catatan Milestone 0.3: merge PR 0.3, PR Makefile untuk `dev-up` ditinjau BizzyReal, lalu Owner membuat tag `v0.0.3`), lanjut 0.4 (kontrak ekstensibilitas; menyelaraskan schema `hello` dan Q7 dengan ADR-0003), lalu C.2 (OpenAPI v1 draf: mulai dari `docs/contracts/erd.md` bagian 3, satu berkas per modul di `docs/contracts/openapi/`; setiap field harus ada di DDL atau diberi alasan, checklist C.8).
   5. OPEN QUESTION yang menjadi prasyarat: Q1 dan Q10 sebelum C.3; Q14 sebelum C.4 (Q11 dan Q13 sudah terjawab, D10 dan D11); Q3, Q4, Q9 di C.6; Q2 di awal 1.8.
@@ -67,7 +67,7 @@
 
 ### 2026-10-27 — 0.3 berkas selesai (batas parsial, menunggu PR Makefile)
 - **Track / Milestone:** S / 0.3
-- **Branch & commit terakhir:** `feat/0.3-dev-infra` (base `main` `6978e6d`); tag belum dibuat
+- **Branch & commit terakhir:** `feat/0.3-dev-infra` (base `main` `a9824b4`); tag belum dibuat
 - **Ringkasan:** compose, `.env.example`, dan `dev-up.sh` selesai dan tervalidasi pada Docker Engine 29.7.2 (bukti di Completed Features). `make dev-up` belum ada.
 - **Berkas diubah:** `deploy/docker-compose.yml`, `deploy/.env.example`, `deploy/scripts/dev-up.sh`, `docs/handover/server.md`
 - **Keputusan yang diambil:** opsi A untuk Makefile; 🚩 di 0.3 = PR biasa; tag Redis dipin ke versi yang dilaporkan `redis:latest` (8.10.3) setelah `docker pull redis:8.10.3` berhasil; lihat Catatan Milestone 0.3.
