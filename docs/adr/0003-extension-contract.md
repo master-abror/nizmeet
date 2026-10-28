@@ -18,7 +18,7 @@ Career Studio dan fitur lain direncanakan setelah MVP. Fitur baru harus masuk se
 
 ### Database
 4. **Namespace = skema PostgreSQL per modul.** Tabel inti ada di `public`; tabel modul ada di skema bernama modul (seperti `hello` di `docs/contracts/db/ddl.sql`).
-5. **Migrasi per modul**, dengan pelacakan versi sendiri per modul, sehingga berjalan, di-rollback, dan dihapus terpisah dari inti dan modul lain. Hanya aditif (expand/contract). Kolom spesifik tipe disimpan di `payload` jsonb. Setiap migrasi modul punya langkah down.
+5. **Migrasi per modul**, dengan pelacakan versi sendiri per modul, sehingga berjalan, di-rollback, dan dihapus terpisah dari inti dan modul lain. Hanya aditif (expand/contract). Kolom spesifik tipe disimpan di `payload` jsonb. Setiap migrasi modul punya langkah down. Tabel versi migrasi modul berada di skema modul itu sendiri. Karena itu skema modul dibuat dan dihapus oleh runner migrasi, bukan oleh berkas migrasi modul: skema tidak boleh dihapus dari dalam migrasi down yang masih perlu mencatat versinya.
 6. **Menghapus modul** = down migrasinya (skema modul ikut hilang), hapus folder, hapus satu baris registrasi. Tidak boleh ada sisa di inti.
 
 ### Data dan sinkronisasi
