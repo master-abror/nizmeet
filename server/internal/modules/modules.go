@@ -3,9 +3,14 @@
 // ditambah satu entri di All.
 package modules
 
-import "github.com/master-abror/nizmeet/server/internal/module"
+import (
+	"github.com/master-abror/nizmeet/server/internal/hello"
+	"github.com/master-abror/nizmeet/server/internal/module"
+)
 
 // All mengembalikan semua modul sesuai urutan registrasi.
 func All() []module.Module {
-	return []module.Module{}
+	return []module.Module{
+		hello.New(),
+	}
 }
