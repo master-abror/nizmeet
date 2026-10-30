@@ -65,8 +65,9 @@ func TestStatsIdleTransitionIsNotGlitch(t *testing.T) {
 
 func TestStatsDiscontinuityClassification(t *testing.T) {
 	st := NewStats(48000, 16000)
-	st.ObservePacket(PacketInfo{Frames: 480, DevicePosition: 0, Discontinuity: true})                 // tak dijelaskan
-	st.ObservePacket(PacketInfo{Frames: 480, DevicePosition: 480, Discontinuity: true, Silent: true}) // paket SILENT: wajar
+	st.ObservePacket(PacketInfo{Frames: 480, DevicePosition: 0})
+	st.ObservePacket(PacketInfo{Frames: 480, DevicePosition: 480, Discontinuity: true})               // tengah aliran: tak dijelaskan
+	st.ObservePacket(PacketInfo{Frames: 480, DevicePosition: 960, Discontinuity: true, Silent: true}) // paket SILENT: wajar
 	s := st.Snapshot()
 	if s.DiscontinuityFlags != 2 || s.DiscontinuityUnexplained != 1 || s.DiscontinuityExpected != 1 {
 		t.Errorf("klasifikasi: %+v", s)

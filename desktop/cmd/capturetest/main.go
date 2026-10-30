@@ -38,6 +38,7 @@ func run() int {
 	dur := flag.Duration("dur", 30*time.Second, "lama uji")
 	wavPath := flag.String("wav", "", "tulis keluaran 16 kHz mono int16 ke berkas WAV")
 	idle := flag.Duration("idle", 250*time.Millisecond, "ambang idle (mulai isi sunyi)")
+	csvPath := flag.String("csv", "", "tulis ukuran per detik ke berkas CSV (untuk uji 30 menit)")
 	flag.Parse()
 
 	cfg := capture.DefaultConfig()
@@ -71,6 +72,13 @@ func run() int {
 	cpu0 := processCPU()
 
 	ring := c.Ring()
+	rec, err := newRecorder(*csvPath, cfg.OutRate, c.TakeGapIntervalMax)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "GAGAL buka CSV: %v\n", err)
+		c.Stop()
+		return 1
+	}
+	defer rec.Close()
 	buf := make([]int16, 3200)
 	var consumed int64
 	maxRing := 0
@@ -104,7 +112,7 @@ loop:
 		case <-deadline:
 			break loop
 		case <-report.C:
-			fmt.Printf("t=%3.0fs  %s\n", time.Since(t0).Seconds(), c.Info())
+			rec.Sample(time.Since(t0), c.Info(), ring.Len())
 		case <-tick.C:
 			if l := ring.Len(); l > maxRing {
 				maxRing = l
@@ -131,6 +139,7 @@ loop:
 	fmt.Printf("rasio keluaran/jam-dinding=%.4f  ring tertinggi=%d/%d sampel\n",
 		float64(consumed)/(float64(cfg.OutRate)*wall.Seconds()), maxRing, info.RingCap)
 	fmt.Println(info)
+	rec.Summary(wall, info)
 	fmt.Printf("CPU proses: %.2f%% dari satu core, %.2f%% ternormalisasi (%d core)\n",
 		100*cpu.Seconds()/wall.Seconds(), 100*cpu.Seconds()/wall.Seconds()/float64(runtime.NumCPU()), runtime.NumCPU())
 	if info.LastError != "" {

@@ -130,6 +130,7 @@ func (st *Stats) ObservePacket(p PacketInfo) {
 		s.SilentPackets++
 	}
 	afterIdle := st.idleSinceLast
+	firstOfStream := !st.havePos // paket pertama stream (baru atau setelah reinit)
 	st.idleSinceLast = false
 
 	if st.havePos {
@@ -154,7 +155,7 @@ func (st *Stats) ObservePacket(p PacketInfo) {
 
 	if p.Discontinuity {
 		s.DiscontinuityFlags++
-		if afterIdle || p.Silent {
+		if afterIdle || firstOfStream || p.Silent {
 			s.DiscontinuityExpected++
 		} else {
 			s.DiscontinuityUnexplained++

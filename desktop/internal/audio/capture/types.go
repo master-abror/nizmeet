@@ -25,7 +25,8 @@ type Packet struct {
 	Data           []byte
 	Frames         uint32
 	DevicePosition uint64
-	Silent         bool // isi Data harus diabaikan (anggap nol)
+	QPCPosition    uint64 // posisi QPC frame pertama (satuan 100 ns: dokumentasi, TIDAK TERVERIFIKASI)
+	Silent         bool   // isi Data harus diabaikan (anggap nol)
 	Discontinuity  bool
 	TimestampError bool
 }
@@ -152,19 +153,23 @@ type Info struct {
 	DataWithoutEvent uint64        // paket yang datang saat event timeout
 
 	SamplesOut      int64  // sampel keluaran total (nyata + sunyi)
-	SilenceSamples  int64  // sunyi sintetis
+	SilenceIdle     int64  // sunyi pengisi idle (hening tanpa paket)
+	SilenceGap      int64  // sunyi pengisi celah (buka ulang, macet)
+	FramePad        int64  // nol pelengkap frame saat Stop
 	Clipped         uint64 // sampel yang dijepit saat konversi ke int16
 	TimelineResyncs uint64 // isi sunyi dibatasi MaxCatchUp
 	DroppedFrames   uint64 // frame utuh dibuang karena ring penuh
 
 	RingLen, RingCap int
+
+	Gaps GapSnapshot // celah antarpaket: jitter vs hening
 }
 
 func (i Info) String() string {
-	return fmt.Sprintf("dev=%q fmt=[%s] idle=%v keluar=%d sunyi=%d clip=%d ring=%d/%d buang-frame=%d reopen=%d gagal-buka=%d celah-reinit=%v data-tanpa-event=%d resync=%d | %s",
-		i.Device, i.Format, i.Idle, i.SamplesOut, i.SilenceSamples, i.Clipped, i.RingLen, i.RingCap,
+	return fmt.Sprintf("dev=%q fmt=[%s] idle=%v keluar=%d sunyi-idle=%d sunyi-celah=%d pad-frame=%d clip=%d ring=%d/%d buang-frame=%d reopen=%d gagal-buka=%d celah-reinit=%v data-tanpa-event=%d resync=%d | celah>50ms jitter=%d hening=%d lain=%d maks=%v | %s",
+		i.Device, i.Format, i.Idle, i.SamplesOut, i.SilenceIdle, i.SilenceGap, i.FramePad, i.Clipped, i.RingLen, i.RingCap,
 		i.DroppedFrames, i.Reopens, i.OpenFailures, i.ReinitGap.Round(time.Millisecond), i.DataWithoutEvent,
-		i.TimelineResyncs, i.Stats)
+		i.TimelineResyncs, i.Gaps.Jitter, i.Gaps.Silence, i.Gaps.Other, i.Gaps.Max.Round(time.Millisecond), i.Stats)
 }
 
 func buildInfo(p *Pipeline, st *pcm.Stats, c *Counters, ring *pcm.Ring) Info {
@@ -179,11 +184,14 @@ func buildInfo(p *Pipeline, st *pcm.Stats, c *Counters, ring *pcm.Ring) Info {
 		ReinitGap:        time.Duration(c.reinitGapNs.Load()),
 		DataWithoutEvent: c.dataWithoutEvent.Load(),
 		SamplesOut:       p.Emitted(),
-		SilenceSamples:   p.SilenceSamples(),
+		SilenceIdle:      p.SilenceIdle(),
+		SilenceGap:       p.SilenceGap(),
+		FramePad:         p.FramePad(),
 		Clipped:          p.Clipped(),
 		TimelineResyncs:  p.Resyncs(),
 		DroppedFrames:    p.DroppedFrames(),
 		RingLen:          ring.Len(),
 		RingCap:          ring.Cap(),
+		Gaps:             p.Gaps(),
 	}
 }

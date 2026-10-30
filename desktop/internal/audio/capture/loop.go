@@ -42,6 +42,7 @@ func Run(ctx context.Context, op Opener, p *Pipeline, clk Clock, cfg Config, ctr
 			gapStart = time.Time{}
 		}
 		backoff = cfg.ReopenMin
+		p.Resume(clk.Now())
 		dev, format := src.DeviceID(), src.Format().String()
 		ctr.device.Store(&dev)
 		ctr.format.Store(&format)

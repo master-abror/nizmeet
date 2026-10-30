@@ -48,7 +48,11 @@ type Pipeline struct {
 	idleAccounted time.Time
 
 	emitted       atomic.Int64
-	silence       atomic.Int64
+	silence       atomic.Int64 // sunyi pengisi idle (Tick)
+	silenceGap    atomic.Int64 // sunyi pengisi celah (buka ulang, macet)
+	framePad      atomic.Int64 // nol pelengkap frame saat Close
+	everPacket    bool         // sudah ada paket nyata sejak Start
+	gaps          GapTracker
 	clipped       atomic.Uint64
 	resyncs       atomic.Uint64
 	droppedFrames atomic.Uint64
@@ -121,6 +125,7 @@ func (p *Pipeline) SetFormat(f wasapi.Format) error {
 		p.flushResampler()
 	}
 	p.format, p.enc, p.dm, p.rs = f, enc, dm, rs
+	p.gaps.Reset()
 	p.stats.SetDeviceRate(int(f.SampleRate))
 	if reconfigure {
 		p.stats.ObserveReinit()
@@ -145,6 +150,7 @@ func (p *Pipeline) HandlePacket(pk Packet, now time.Time) error {
 		Discontinuity:  pk.Discontinuity,
 		TimestampError: pk.TimestampError,
 	})
+	p.gaps.Observe(now, pk.Frames, int(p.format.SampleRate), pk.QPCPosition, pk.TimestampError)
 	if p.idle {
 		p.idle = false
 		p.idleFlag.Store(false)
@@ -163,9 +169,11 @@ func (p *Pipeline) HandlePacket(pk Packet, now time.Time) error {
 	}
 	p.out = p.rs.Process(p.out[:0], p.mono)
 	p.rsDirty = true
+	p.catchUp(now, len(p.out))
 	p.emitFloat(p.out)
 	p.tl.Anchor(now)
 	p.lastPacket = now
+	p.everPacket = true
 	return nil
 }
 
@@ -188,11 +196,11 @@ func (p *Pipeline) Tick(now time.Time) {
 	if limit := int(int64(p.cfg.MaxCatchUp) * int64(p.cfg.OutRate) / int64(time.Second)); def > limit {
 		// Macet panjang (mis. proses ditangguhkan): batasi isi sunyi lalu pasang ulang jangkar.
 		p.resyncs.Add(1)
-		p.emitSilence(limit)
+		p.emitSilence(limit, &p.silence)
 		p.tl.Anchor(now)
 		return
 	}
-	p.emitSilence(def)
+	p.emitSilence(def, &p.silence)
 }
 
 // Close menguras ekor resampler dan melengkapi frame yang tersisa dengan nol
@@ -200,7 +208,7 @@ func (p *Pipeline) Tick(now time.Time) {
 func (p *Pipeline) Close() {
 	p.flushResampler()
 	if pend := p.framer.Pending(); pend > 0 {
-		p.emitSilence(p.framer.Size() - pend)
+		p.emitSilence(p.framer.Size()-pend, &p.framePad)
 	}
 }
 
@@ -208,7 +216,9 @@ func (p *Pipeline) Close() {
 func (p *Pipeline) Emitted() int64 { return p.emitted.Load() }
 
 // SilenceSamples mengembalikan jumlah sunyi sintetis (termasuk pelengkap frame saat Close).
-func (p *Pipeline) SilenceSamples() int64 { return p.silence.Load() }
+func (p *Pipeline) SilenceSamples() int64 {
+	return p.silence.Load() + p.silenceGap.Load() + p.framePad.Load()
+}
 
 // Clipped mengembalikan jumlah sampel yang dijepit saat konversi ke int16.
 func (p *Pipeline) Clipped() uint64 { return p.clipped.Load() }
@@ -254,11 +264,11 @@ func (p *Pipeline) emitFloat(s []float32) {
 	p.framer.Push(p.i16, p.emit)
 }
 
-func (p *Pipeline) emitSilence(n int) {
+func (p *Pipeline) emitSilence(n int, counter *atomic.Int64) {
 	for n > 0 {
 		k := min(n, len(p.zerosI))
 		p.account(k)
-		p.silence.Add(int64(k))
+		counter.Add(int64(k))
 		p.framer.Push(p.zerosI[:k], p.emit)
 		n -= k
 	}

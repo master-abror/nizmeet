@@ -72,6 +72,7 @@ func (s *wasapiSource) Next() (Packet, bool, error) {
 		Data:           pk.Data,
 		Frames:         pk.Frames,
 		DevicePosition: pk.DevicePosition,
+		QPCPosition:    pk.QPCPosition,
 		Silent:         pk.Flags&wasapi.AudclntBufferflagsSilent != 0,
 		Discontinuity:  pk.Flags&wasapi.AudclntBufferflagsDataDiscontinuity != 0,
 		TimestampError: pk.Flags&wasapi.AudclntBufferflagsTimestampError != 0,
