@@ -96,7 +96,7 @@ func bucketIndex(gap time.Duration) int {
 }
 
 // Observe mencatat satu paket: waktu tiba, jumlah frame, laju perangkat, dan QPCPosition.
-func (g *GapTracker) Observe(arrival time.Time, frames uint32, rate int, qpc uint64, tsErr bool) {
+func (g *GapTracker) Observe(arrival time.Time, frames uint32, rate int, qpc uint64, tsErr bool) (class GapClass, hole time.Duration) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	var dur time.Duration
@@ -123,24 +123,29 @@ func (g *GapTracker) Observe(arrival time.Time, frames uint32, rate int, qpc uin
 			g.s.Count++
 			if !qpcOK {
 				g.s.Unknown++
+				class = GapUnknown
 			} else {
-				hole := qpcDelta - g.prevDur // waktu tanpa audio terekam di antara dua paket
+				hole = qpcDelta - g.prevDur
 				switch {
 				case hole < contiguousTol:
 					g.s.Jitter++
+					class = GapJitter
 					if gap > g.s.MaxJitter {
 						g.s.MaxJitter = gap
 					}
 				case hole*2 > gap:
 					g.s.Silence++
+					class = GapSilence
 					if hole > g.s.MaxSilenceHole {
 						g.s.MaxSilenceHole = hole
 					}
 				default:
 					g.s.Other++
+					class = GapOther
 				}
 			}
 		}
 	}
 	g.have, g.prevArrival, g.prevQPC, g.prevDur = true, arrival, qpc, dur
+	return class, hole
 }

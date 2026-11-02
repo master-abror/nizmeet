@@ -15,13 +15,25 @@ import "time"
 //
 // Paket nyata pertama sejak Start tidak pernah memicu pad: latensi pembukaan
 // awal bukan celah audio.
-func (p *Pipeline) catchUp(now time.Time, pending int) {
+func (p *Pipeline) catchUp(now time.Time, pending int, class GapClass, hole time.Duration) {
+	// Tahap 4c: celah > 50 ms diputuskan lewat QPC (kelas dari GapTracker); komentar
+	// di atas yang menyebut ambang IdleThreshold kini hanya berlaku untuk kelas lain.
+
 	if !p.everPacket {
 		return
 	}
-	minPad := int(int64(p.cfg.IdleThreshold) * int64(p.cfg.OutRate) / int64(time.Second))
+	if class == GapJitter {
+		return // jam capture kontinu: audio terlambat, bukan hilang
+	}
 	pad := p.tl.Deficit(now) - pending
-	if pad < minPad {
+	if class == GapSilence {
+		// Lubang jam capture = lama perangkat tidak menghasilkan audio. Jangan melebihi
+		// defisit jam dinding (Tick mungkin sudah mengisi sebagian).
+		pad = min(pad, int(int64(hole)*int64(p.cfg.OutRate)/int64(time.Second)))
+	} else if minPad := int(int64(p.cfg.IdleThreshold) * int64(p.cfg.OutRate) / int64(time.Second)); pad < minPad {
+		return // tanpa klasifikasi QPC: aturan ambang waktu seperti sebelumnya
+	}
+	if pad <= 0 {
 		return
 	}
 	if limit := int(int64(p.cfg.MaxCatchUp) * int64(p.cfg.OutRate) / int64(time.Second)); pad > limit {

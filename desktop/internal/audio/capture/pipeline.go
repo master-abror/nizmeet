@@ -150,7 +150,7 @@ func (p *Pipeline) HandlePacket(pk Packet, now time.Time) error {
 		Discontinuity:  pk.Discontinuity,
 		TimestampError: pk.TimestampError,
 	})
-	p.gaps.Observe(now, pk.Frames, int(p.format.SampleRate), pk.QPCPosition, pk.TimestampError)
+	class, hole := p.gaps.Observe(now, pk.Frames, int(p.format.SampleRate), pk.QPCPosition, pk.TimestampError)
 	if p.idle {
 		p.idle = false
 		p.idleFlag.Store(false)
@@ -169,7 +169,7 @@ func (p *Pipeline) HandlePacket(pk Packet, now time.Time) error {
 	}
 	p.out = p.rs.Process(p.out[:0], p.mono)
 	p.rsDirty = true
-	p.catchUp(now, len(p.out))
+	p.catchUp(now, len(p.out), class, hole)
 	p.emitFloat(p.out)
 	p.tl.Anchor(now)
 	p.lastPacket = now
